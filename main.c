@@ -23,20 +23,20 @@ int main(int argc, char *argv[])
 		exit(0);
 	}
 
-    int c;
-    while ((c = getopt(argc, argv, "sv")) != -1) {
-        switch (c) {
-        	case 's':
-        	    scan_mode = true;
-        	    break;
-        	case 'v':
-        	    verbose_mode = true;
-        	    break;
-        	default:
+	int c;
+	while ((c = getopt(argc, argv, "sv")) != -1) {
+		switch (c) {
+			case 's':
+				scan_mode = true;
+				break;
+			case 'v':
+				verbose_mode = true;
+				break;
+			default:
 				print_usage(argv[0]);
 				exit(0);
 			}
-    }
+	}
 
 	return 0;
 }
