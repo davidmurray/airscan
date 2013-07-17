@@ -1,0 +1,10 @@
+Package: me.cykey.airscan
+Name: airscan
+Depends: 
+Version: 0.0.1
+Architecture: iphoneos-arm
+Description: An awesome tool of some sort!!
+Maintainer: Cykey
+Author: Cykey
+Section: System
+Tag: role::hacker
