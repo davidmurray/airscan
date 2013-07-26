@@ -28,29 +28,29 @@ static void pretty_print_network(WiFiNetworkRef network)
 	const char *BSSID = CFStringGetCStringPtr(WiFiNetworkGetProperty(network, CFSTR("BSSID")), kCFStringEncodingMacRoman);
 
 	// RSSI.
-    CFNumberRef RSSI = (CFNumberRef)WiFiNetworkGetProperty(network, kWiFiScaledRSSIKey);
-    float strength;
-    CFNumberGetValue(RSSI, kCFNumberFloatType, &strength);
+	CFNumberRef RSSI = (CFNumberRef)WiFiNetworkGetProperty(network, kWiFiScaledRSSIKey);
+	float strength;
+	CFNumberGetValue(RSSI, kCFNumberFloatType, &strength);
 
-    strength = strength * 100;
+	strength = strength * 100;
 
-    // Round to the nearest integer.
-    strength = ceilf(strength);
+	// Round to the nearest integer.
+	strength = ceilf(strength);
 
-    // Convert to a negative number.
-    strength = strength * -1;
+	// Convert to a negative number.
+	strength = strength * -1;
 
-    CFNumberRef networkChannel = (CFNumberRef)WiFiNetworkGetProperty(network, CFSTR("CHANNEL"));
-    int channel;
-    CFNumberGetValue(networkChannel, kCFNumberIntType, &channel);
+	CFNumberRef networkChannel = (CFNumberRef)WiFiNetworkGetProperty(network, CFSTR("CHANNEL"));
+	int channel;
+	CFNumberGetValue(networkChannel, kCFNumberIntType, &channel);
 
-    // Hidden.
-    CFStringRef isHidden = (WiFiNetworkIsHidden(network) ? CFSTR("YES") : CFSTR("NO"));
+	// Hidden.
+	CFStringRef isHidden = (WiFiNetworkIsHidden(network) ? CFSTR("YES") : CFSTR("NO"));
 
-    // Security model.
-    CFStringRef isEAP = (WiFiNetworkIsEAP(network) ? CFSTR("YES") : CFSTR("NO"));
-    CFStringRef isWEP = (WiFiNetworkIsWEP(network) ? CFSTR("YES") : CFSTR("NO"));
-    CFStringRef isWPA = (WiFiNetworkIsWPA(network) ? CFSTR("YES") : CFSTR("NO"));
+	// Security model.
+	CFStringRef isEAP = (WiFiNetworkIsEAP(network) ? CFSTR("YES") : CFSTR("NO"));
+	CFStringRef isWEP = (WiFiNetworkIsWEP(network) ? CFSTR("YES") : CFSTR("NO"));
+	CFStringRef isWPA = (WiFiNetworkIsWPA(network) ? CFSTR("YES") : CFSTR("NO"));
 
 	CFStringRef format = CFStringCreateWithFormat(kCFAllocatorDefault, NULL, CFSTR("%-40s BSSI: %s, RSSI: %.0f dBm, CHANNEL: %d, HIDDEN: %@, EAP: %@, WEP: %@, WPA: %@"), SSID, BSSID, strength, channel, isHidden, isEAP, isWEP, isWPA);
 	CFShow(format);
