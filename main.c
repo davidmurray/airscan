@@ -10,7 +10,6 @@
 #include <MobileWiFi/MobileWiFi.h>
 
 static WiFiManagerRef manager;
-static WiFiDeviceClientRef device;
 static bool verbose_mode = false;
 static bool scan_mode = false;
 
@@ -19,6 +18,7 @@ static inline void verbose_log(char *format, ...);
 static void scan_callback(WiFiDeviceClientRef device, CFArrayRef results, CFErrorRef error, void *unknown);
 static void begin_scan();
 static void print_usage(char *progname);
+static void signal_handler(int signal);
 
 static void pretty_print_network(WiFiNetworkRef network)
 {
@@ -85,20 +85,29 @@ static void scan_callback(WiFiDeviceClientRef device, CFArrayRef results, CFErro
 static void begin_scan()
 {
 	verbose_log("Creating WiFiManagerClient...\n");
+
 	manager = WiFiManagerClientCreate(kCFAllocatorDefault, 0);
-	assert(manager != NULL);
+	if (!manager) {
+		fprintf(stderr, "Couldn't create WiFiManagerClient.\n");
+		exit(EXIT_FAILURE);
+	}
+
 	CFArrayRef devices = WiFiManagerClientCopyDevices(manager);
-	assert(devices != NULL);
+	if (!devices) {
+		fprintf(stderr, "Couldn't get WiFiDeviceClients.\n");
+		exit(EXIT_FAILURE);
+	}
+
 	verbose_log("Getting WiFiDeviceClient...\n");
-	device = (WiFiDeviceClientRef)CFArrayGetValueAtIndex(devices, 0);
-	assert(device != NULL);
+
+	WiFiDeviceClientRef device = (WiFiDeviceClientRef)CFArrayGetValueAtIndex(devices, 0);
 	CFRelease(devices);
 
 	verbose_log("Scheduling manager client with run loop...\n");
 	WiFiManagerClientScheduleWithRunLoop(manager, CFRunLoopGetCurrent(), kCFRunLoopDefaultMode);
 
 	// It is necessary to pass an empty dictionary (NULL does not work).
-	CFDictionaryRef options = CFDictionaryCreate(NULL, NULL, NULL, 0, NULL, NULL);
+	CFDictionaryRef options = CFDictionaryCreate(kCFAllocatorDefault, NULL, NULL, 0, NULL, NULL);
 	verbose_log("Starting to scan...\n");
 	WiFiDeviceClientScanAsync(device, options, scan_callback, 0);
 	CFRelease(options);
@@ -106,20 +115,34 @@ static void begin_scan()
 
 static void print_usage(char *progname)
 {
-	printf("\nUsage: %s <options>\nOptions include:\n", progname);
+	printf("Airscan 1.0\nUsage: %s <options>\nOptions include:\n", progname);
 	printf("\t-s:\tScan for nearby WiFi networks.\n");
 	printf("\t-v:\tEnable verbose mode.\n");
+	printf("\t-h:\tPrint this help.\n");
+}
+
+static void signal_handler(int signal)
+{
+	printf("Got signal: %d. Exiting.\n", signal);
+
+	if (manager) {
+		CFRelease(manager);
+	}
+
+	exit(0);
 }
 
 int main(int argc, char *argv[])
 {
 	if (argc < 2) {
-		print_usage(argv[0]);
+		printf("Must specify either -s or -h.\n");
 		exit(0);
 	}
 
+	signal(SIGINT, signal_handler);
+
 	int c;
-	while ((c = getopt(argc, argv, "sv")) != -1) {
+	while ((c = getopt(argc, argv, "svh")) != -1) {
 		switch (c) {
 			case 's':
 				scan_mode = true;
@@ -127,8 +150,12 @@ int main(int argc, char *argv[])
 			case 'v':
 				verbose_mode = true;
 				break;
-			default:
+			case 'h':
 				print_usage(argv[0]);
+				exit(0);
+				break;
+			default:
+				printf("Must specify either -s or -h.\n");
 				exit(0);
 			}
 	}
