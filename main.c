@@ -64,8 +64,8 @@ static void pretty_print_network(WiFiNetworkRef network)
 	float graded;
 	CFNumberGetValue(gradedRSSI, kCFNumberFloatType, &graded);
 
-    int bars = (int)ceilf((graded * -1.0f) * -3.0f);
-    bars = MAX(1, MIN(bars, 3));
+	int bars = (int)ceilf((graded * -1.0f) * -3.0f);
+	bars = MAX(1, MIN(bars, 3));
 
 	// Channel.
 	CFNumberRef networkChannel = (CFNumberRef)WiFiNetworkGetProperty(network, CFSTR("CHANNEL"));
