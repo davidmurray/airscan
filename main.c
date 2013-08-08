@@ -9,27 +9,18 @@
 #include <CoreFoundation/CoreFoundation.h>
 #include <MobileWiFi/MobileWiFi.h>
 
-/*
- * TODO:
- * Fix "Must specify either -s or -h." stuff
- * More colors
- * Clean up
- */
-
 // Colors!
-// (Taken from http://stackoverflow.com/a/3586005/1218712.)
-#define KNRM "\x1B[0m"
-#define KRED "\x1B[31m"
-#define KGRN "\x1B[32m"
-#define KYEL "\x1B[33m"
-#define KBLU "\x1B[34m"
-#define KMAG "\x1B[35m"
-#define KCYN "\x1B[36m"
-#define KWHT "\x1B[37m"
+#define kNRM "\x1B[0m"
+#define kBLU "\x1B[34m"
+#define kGRN "\x1B[32m"
+#define kRED "\x1B[31m"
 
 #define ERROR(x) \
-	fprintf(stderr, KRED "[Error] " KNRM x); \
+	fprintf(stderr, kRED "[Error] " kNRM x); \
 	exit(EXIT_FAILURE);
+
+#define MIN(a, b) ((a) < (b) ? (a) : (b))
+#define MAX(a, b) ((a) > (b) ? (a) : (b))
 
 static WiFiManagerRef manager;
 static WiFiDeviceClientRef device;
@@ -64,18 +55,19 @@ static void pretty_print_network(WiFiNetworkRef network)
 	const char *BSSID = CFStringGetCStringPtr(WiFiNetworkGetProperty(network, CFSTR("BSSID")), kCFStringEncodingMacRoman);
 
 	// RSSI.
-	CFNumberRef RSSI = (CFNumberRef)WiFiNetworkGetProperty(network, kWiFiScaledRSSIKey);
+	CFNumberRef RSSI = (CFNumberRef)WiFiNetworkGetProperty(network, CFSTR("RSSI"));
 	float strength;
 	CFNumberGetValue(RSSI, kCFNumberFloatType, &strength);
 
-	strength = strength * 100;
+	// Bars.
+	CFNumberRef gradedRSSI = (CFNumberRef)WiFiNetworkGetProperty(network, kWiFiScaledRSSIKey);
+	float graded;
+	CFNumberGetValue(gradedRSSI, kCFNumberFloatType, &graded);
 
-	// Round to the nearest integer.
-	strength = ceilf(strength);
+    int bars = (int)ceilf((graded * -1.0f) * -3.0f);
+    bars = MAX(1, MIN(bars, 3));
 
-	// Convert to a negative number.
-	strength = strength * -1;
-
+	// Channel.
 	CFNumberRef networkChannel = (CFNumberRef)WiFiNetworkGetProperty(network, CFSTR("CHANNEL"));
 	int channel;
 	CFNumberGetValue(networkChannel, kCFNumberIntType, &channel);
@@ -88,7 +80,7 @@ static void pretty_print_network(WiFiNetworkRef network)
 	CFStringRef isWEP = (WiFiNetworkIsWEP(network) ? CFSTR("YES") : CFSTR("NO"));
 	CFStringRef isWPA = (WiFiNetworkIsWPA(network) ? CFSTR("YES") : CFSTR("NO"));
 
-	CFStringRef format = CFStringCreateWithFormat(kCFAllocatorDefault, NULL, CFSTR("%s%-40s%s BSSI: %s, RSSI: %.0f dBm, CHANNEL: %d, HIDDEN: %@, EAP: %@, WEP: %@, WPA: %@"), KBLU, SSID, KNRM, BSSID, strength, channel, isHidden, isEAP, isWEP, isWPA);
+	CFStringRef format = CFStringCreateWithFormat(kCFAllocatorDefault, NULL, CFSTR("%s%-40s%s BSSI: %s, RSSI: %.0f dBm, BARS: %d, CHANNEL: %d, HIDDEN: %@, EAP: %@, WEP: %@, WPA: %@"), kBLU, SSID, kNRM, BSSID, strength, bars, channel, isHidden, isEAP, isWEP, isWPA);
 	CFShow(format);
 	CFRelease(format);
 }
@@ -97,7 +89,7 @@ static void scan_callback(WiFiDeviceClientRef device, CFArrayRef results, CFErro
 {
 	CFIndex count = CFArrayGetCount(results);
 
-	verbose_log("Finished scanning. Found %s%d%s networks.\n", KGRN, count, KNRM);
+	verbose_log("Finished scanning. Found %s%d%s networks.\n", kGRN, count, kNRM);
 
 	unsigned x;
 	for (x = 0; x < count; x++) {
@@ -155,7 +147,7 @@ static void print_usage(char *progname)
 {
 	printf("Airscan 1.1\nUsage: %s <options>\nOptions include:\n", progname);
 	printf("\t-s:\tScan for nearby WiFi networks.\n");
-	printf("\t-t: [secs] Scan again every X (defaults to 10) seconds\n");
+	printf("\t-t: [secs] Scan again every X (default: 10) seconds\n");
 	printf("\t-v:\tEnable verbose mode.\n");
 	printf("\t-h:\tPrint this help.\n");
 }
