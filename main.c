@@ -87,15 +87,19 @@ static void pretty_print_network(WiFiNetworkRef network)
 
 static void scan_callback(WiFiDeviceClientRef device, CFArrayRef results, CFErrorRef error, void *unknown)
 {
-	CFIndex count = CFArrayGetCount(results);
+	if (results) {
+		CFIndex count = CFArrayGetCount(results);
 
-	verbose_log("Finished scanning. Found %s%d%s networks.\n", kGRN, count, kNRM);
+		verbose_log("Finished scanning. Found %s%d%s networks.\n", kGRN, count, kNRM);
 
-	unsigned x;
-	for (x = 0; x < count; x++) {
-		WiFiNetworkRef network = (WiFiNetworkRef)CFArrayGetValueAtIndex(results, x);
+		unsigned x;
+		for (x = 0; x < count; x++) {
+			WiFiNetworkRef network = (WiFiNetworkRef)CFArrayGetValueAtIndex(results, x);
 
-		pretty_print_network(network);
+			pretty_print_network(network);
+		}
+	} else {
+		verbose_log("Got no results. (Is WiFi on?)\n");
 	}
 
 	if (!timerMode)
