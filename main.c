@@ -30,7 +30,7 @@ static bool timerMode = false;
 
 static void pretty_print_network(WiFiNetworkRef network);
 static inline void verbose_log(char *format, ...);
-static void scan_callback(WiFiDeviceClientRef device, CFArrayRef results, CFErrorRef error, void *unknown);
+static void scan_callback(WiFiDeviceClientRef device, CFArrayRef results, int error, const void *object);
 static void begin_scan();
 static void setup_for_scan();
 static void print_usage(char *progname);
@@ -85,7 +85,7 @@ static void pretty_print_network(WiFiNetworkRef network)
 	CFRelease(format);
 }
 
-static void scan_callback(WiFiDeviceClientRef device, CFArrayRef results, CFErrorRef error, void *unknown)
+static void scan_callback(WiFiDeviceClientRef device, CFArrayRef results, int error, const void *object)
 {
 	if (results) {
 		CFIndex count = CFArrayGetCount(results);
