@@ -1,3 +1,5 @@
+export ARCHS = armv7 arm64
+
 export ADDITIONAL_CFLAGS = -I$(THEOS_PROJECT_DIR)/ios-reversed-headers
 
 include theos/makefiles/common.mk
